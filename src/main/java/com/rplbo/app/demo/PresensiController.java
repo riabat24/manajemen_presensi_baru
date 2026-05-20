@@ -86,7 +86,7 @@ public class PresensiController implements Initializable {
 
     private void simpanClockIn(LocalTime jamMasuk) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "INSERT INTO tb_presensi (id_karyawan, tanggal, jam_masuk, status_kehadiran, status_waktu) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO presensi (id_karyawan, tanggal, jam_masuk, status_kehadiran, status_waktu) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement pst = conn.prepareStatement(sql);
 
             pst.setInt(1, UserSession.getInstance().getIdKaryawan());
@@ -102,7 +102,7 @@ public class PresensiController implements Initializable {
 
     private void simpanClockOut(LocalTime jamKeluar) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE tb_presensi SET jam_keluar = ? WHERE tanggal = ? AND id_karyawan = ?";
+            String sql = "UPDATE presensi SET jam_keluar = ? WHERE tanggal = ? AND id_karyawan = ?";
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setTime(1, java.sql.Time.valueOf(jamKeluar));
             pst.setDate(2, java.sql.Date.valueOf(LocalDate.now()));
@@ -115,7 +115,7 @@ public class PresensiController implements Initializable {
 
     private void loadPresensiHariIni() {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT * FROM tb_presensi WHERE tanggal = ? AND id_karyawan = ?";
+            String sql = "SELECT * FROM presensi WHERE tanggal = ? AND id_karyawan = ?";
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setDate(1, java.sql.Date.valueOf(LocalDate.now()));
             pst.setInt(2, UserSession.getInstance().getIdKaryawan());

@@ -107,7 +107,7 @@ public class RiwayatController implements Initializable {
                     DatabaseConnection.getConnection();
 
             String sql =
-                    "SELECT * FROM tb_presensi " +
+                    "SELECT * FROM presensi " +
                             "ORDER BY tanggal DESC";
 
             PreparedStatement pst =
@@ -156,7 +156,7 @@ public class RiwayatController implements Initializable {
             // TOTAL HADIR
             String hadirSql =
                     "SELECT COUNT(*) as total " +
-                            "FROM tb_presensi " +
+                            "FROM presensi " +
                             "WHERE status='Tepat Waktu'";
 
             PreparedStatement hadirPst =
@@ -175,7 +175,7 @@ public class RiwayatController implements Initializable {
             // TOTAL TERLAMBAT
             String terlambatSql =
                     "SELECT COUNT(*) as total " +
-                            "FROM tb_presensi " +
+                            "FROM presensi " +
                             "WHERE status='Terlambat'";
 
             PreparedStatement terlambatPst =
@@ -194,7 +194,7 @@ public class RiwayatController implements Initializable {
             // TOTAL IZIN
             String izinSql =
                     "SELECT COUNT(*) as total " +
-                            "FROM tb_presensi " +
+                            "FROM presensi " +
                             "WHERE status='Izin'";
 
             PreparedStatement izinPst =

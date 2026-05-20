@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="TOP_CENTER"
+      spacing="20"
+      style="-fx-background-color: #f5f5f5;"
+      xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.rplbo.app.demo.PresensiController">
+
+    <padding>
+        <Insets top="30"
+                right="30"
+                bottom="30"
+                left="30"/>
+    </padding>
+    <!-- BUTTON KEMBALI KE DASHBOARD -->
+    <Button text="⬅ Kembali ke Dashboard"
+            onAction="#handleKembaliDashboard"
+            prefWidth="250"
+            prefHeight="45"
+            style="-fx-background-color: #1976D2;
+               -fx-text-fill: white;
+               -fx-font-size: 16px;
+               -fx-background-radius: 10;"/>
+
+    <!-- JUDUL -->
+    <Label text="Menu Presensi">
+        <font>
+            <Font name="System Bold" size="24"/>
+        </font>
+    </Label>
+
+    <!-- JAM DAN TANGGAL -->
+    <VBox alignment="CENTER"
+          prefWidth="400"
+          spacing="10"
+          style="-fx-background-color: white;
+                 -fx-padding: 25;
+                 -fx-background-radius: 15;">
+
+        <!-- JAM DIGITAL -->
+        <Label fx:id="lblJamDigital"
+               text="00:00:00"
+               style="-fx-font-size: 40px;
+                      -fx-font-weight: bold;"/>
+
+        <!-- TANGGAL -->
+        <Label fx:id="lblTanggal"
+               text="Tanggal"
+               style="-fx-font-size: 16px;"/>
+
+    </VBox>
+
+    <!-- CLOCK IN & OUT -->
+    <HBox alignment="CENTER"
+          spacing="20">
+
+        <!-- CLOCK IN -->
+        <VBox alignment="CENTER"
+              prefHeight="150"
+              prefWidth="220"
+              spacing="10"
+              style="-fx-background-color: #E8F5E9;
+                     -fx-background-radius: 15;
+                     -fx-padding: 20;">
+
+            <Label text="CLOCK-IN"
+                   style="-fx-font-size: 18px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: green;"/>
+
+            <Label fx:id="lblJamMasuk"
+                   text="--:--:--"
+                   style="-fx-font-size: 30px;
+                          -fx-font-weight: bold;"/>
+
+            <Label fx:id="lblStatusMasuk"
+                   text="Belum masuk"
+                   style="-fx-background-color: white;
+                          -fx-padding: 5 15 5 15;
+                          -fx-background-radius: 20;"/>
+
+        </VBox>
+
+        <!-- CLOCK OUT -->
+        <VBox alignment="CENTER"
+              prefHeight="150"
+              prefWidth="220"
+              spacing="10"
+              style="-fx-background-color: white;
+                     -fx-border-color: #cccccc;
+                     -fx-border-radius: 15;
+                     -fx-padding: 20;">
+
+            <Label text="CLOCK-OUT"
+                   style="-fx-font-size: 18px;
+                          -fx-font-weight: bold;"/>
+
+            <Label fx:id="lblJamKeluar"
+                   text="--:--:--"
+                   style="-fx-font-size: 30px;
+                          -fx-font-weight: bold;"/>
+
+            <Label fx:id="lblStatusKeluar"
+                   text="Belum keluar"/>
+
+        </VBox>
+
+    </HBox>
+
+    <!-- BUTTON PRESENSI -->
+    <Button fx:id="btnPresensi"
+            text="Clock-In Sekarang"
+            onAction="#handlePresensi"
+            prefWidth="300"
+            prefHeight="50"
+            style="-fx-background-color: #4CAF50;
+                   -fx-text-fill: white;
+                   -fx-font-size: 18px;
+                   -fx-background-radius: 10;"/>
+
+
+
+    <!-- STATUS -->
+    <Label text="Silakan melakukan presensi"
+           style="-fx-text-fill: gray;"/>
+
+</VBox>
