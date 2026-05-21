@@ -66,7 +66,7 @@ public class DashboardController implements Initializable {
             LocalDate hariIni = LocalDate.now();
             int idAktif = UserSession.getInstance().getIdKaryawan();
 
-            String sqlStatus = "SELECT jam_masuk, jam_keluar FROM tb_presensi WHERE tanggal = ? AND id_karyawan = ?";
+            String sqlStatus = "SELECT jam_masuk, jam_keluar FROM presensi WHERE tanggal = ? AND id_karyawan = ?";
             PreparedStatement pstStatus = conn.prepareStatement(sqlStatus);
             pstStatus.setDate(1, java.sql.Date.valueOf(hariIni));
             pstStatus.setInt(2, idAktif);
@@ -87,28 +87,28 @@ public class DashboardController implements Initializable {
             rsStatus.close();
             pstStatus.close();
 
-            String sqlHadir = "SELECT COUNT(*) as total FROM tb_presensi WHERE id_karyawan = ? AND MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE()) AND status_kehadiran = 'hadir'";
+            String sqlHadir = "SELECT COUNT(*) as total FROM presensi WHERE id_karyawan = ? AND MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE()) AND status_kehadiran = 'hadir'";
             PreparedStatement pstHadir = conn.prepareStatement(sqlHadir);
             pstHadir.setInt(1, idAktif);
             ResultSet rsHadir = pstHadir.executeQuery();
             if (rsHadir.next()) lblHadir.setText(rsHadir.getString("total") + " hari");
             rsHadir.close(); pstHadir.close();
 
-            String sqlTerlambat = "SELECT COUNT(*) as total FROM tb_presensi WHERE id_karyawan = ? AND MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE()) AND status_waktu = 'terlambat'";
+            String sqlTerlambat = "SELECT COUNT(*) as total FROM presensi WHERE id_karyawan = ? AND MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE()) AND status_waktu = 'terlambat'";
             PreparedStatement pstTerlambat = conn.prepareStatement(sqlTerlambat);
             pstTerlambat.setInt(1, idAktif);
             ResultSet rsTerlambat = pstTerlambat.executeQuery();
             if (rsTerlambat.next()) lblTerlambat.setText(rsTerlambat.getString("total") + " kali");
             rsTerlambat.close(); pstTerlambat.close();
 
-            String sqlCuti = "SELECT COUNT(*) as total FROM tb_izin_cuti WHERE id_karyawan = ? AND jenis_izin = 'cuti' AND status_persetujuan = 'disetujui'";
+            String sqlCuti = "SELECT COUNT(*) as total FROM izin_cuti WHERE id_karyawan = ? AND jenis_izin = 'cuti' AND status_persetujuan = 'disetujui'";
             PreparedStatement pstCuti = conn.prepareStatement(sqlCuti);
             pstCuti.setInt(1, idAktif);
             ResultSet rsCuti = pstCuti.executeQuery();
             if (rsCuti.next()) lblCuti.setText(rsCuti.getString("total") + " hari");
             rsCuti.close(); pstCuti.close();
 
-            String sqlIzin = "SELECT COUNT(*) as total FROM tb_izin_cuti WHERE id_karyawan = ? AND jenis_izin IN ('sakit', 'kepentingan lain') AND status_persetujuan = 'disetujui'";
+            String sqlIzin = "SELECT COUNT(*) as total FROM izin_cuti WHERE id_karyawan = ? AND jenis_izin IN ('sakit', 'kepentingan lain') AND status_persetujuan = 'disetujui'";
             PreparedStatement pstIzin = conn.prepareStatement(sqlIzin);
             pstIzin.setInt(1, idAktif);
             ResultSet rsIzin = pstIzin.executeQuery();

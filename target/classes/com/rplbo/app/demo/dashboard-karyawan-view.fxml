@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.rplbo.app.demo.DashboardController">
+
+    <!-- Sidebar Kiri -->
+    <left>
+        <VBox prefWidth="220.0" spacing="10.0" style="-fx-background-color: #F5F5F5; -fx-border-color: #E0E0E0; -fx-border-width: 0 1 0 0;" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="20.0" left="15.0" right="15.0" top="30.0"/>
+            </padding>
+
+            <!-- Profil -->
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <Label style="-fx-background-color: #D0E4FF; -fx-background-radius: 15; -fx-min-width: 30; -fx-min-height: 30; -fx-alignment: center;" text="K" textFill="#0047AB"/>
+                <VBox>
+                    <Label fx:id="lblNamaProfil" text="amelia">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Label text="Karyawan" textFill="#757575">
+                        <font><Font size="12.0"/></font>
+                    </Label>
+                </VBox>
+            </HBox>
+
+            <Label text=""/> <!-- Spacer -->
+
+            <!-- Menu Navigasi -->
+            <Button onAction="#handleMenuBeranda" alignment="BASELINE_LEFT" prefWidth="190.0" style="-fx-background-color: #E3F2FD; -fx-text-fill: #1976D2;" text="🏠 Beranda">
+                <font><Font name="System Bold" size="13.0"/></font>
+            </Button>
+            <Button onAction="#handleMenuPresensi" alignment="BASELINE_LEFT" prefWidth="190.0" style="-fx-background-color: transparent;" text="⏱ Presensi"/>
+            <Button onAction="#handleMenuRiwayat" alignment="BASELINE_LEFT" prefWidth="190.0" style="-fx-background-color: transparent;" text="📄 Riwayat"/>
+            <Button onAction="#handleMenuCuti" alignment="BASELINE_LEFT" prefWidth="190.0" style="-fx-background-color: transparent;" text="🗓 Cuti/Izin"/>
+
+            <VBox VBox.vgrow="ALWAYS" /> <!-- Spacer -->
+
+            <Button onAction="#handleLogout" alignment="BASELINE_LEFT" prefWidth="190.0" style="-fx-background-color: transparent; -fx-text-fill: #D32F2F;" text="🚪 Keluar"/>
+        </VBox>
+    </left>
+
+    <!-- Konten Utama -->
+    <center>
+        <VBox spacing="20.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="30.0" left="30.0" right="30.0" top="30.0"/>
+            </padding>
+
+            <!-- Jam & Tanggal Real-time -->
+            <VBox alignment="CENTER" prefHeight="100.0" style="-fx-background-color: #DCE6F1; -fx-background-radius: 10;">
+                <Label fx:id="lblJam" text="00:00:00" textFill="#1565C0">
+                    <font><Font name="System Bold" size="36.0"/></font>
+                </Label>
+                <Label fx:id="lblTanggal" text="Memuat..." textFill="#546E7A"/>
+            </VBox>
+
+            <!-- Status Hari Ini (Kuning/Pending) -->
+            <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="15.0" style="-fx-background-color: #FFF9C4; -fx-background-radius: 10;">
+                <padding>
+                    <Insets left="20.0" right="20.0"/>
+                </padding>
+                <Label text="⏳">
+                    <font><Font size="24.0"/></font>
+                </Label>
+                <VBox alignment="CENTER_LEFT" spacing="2.0">
+                    <Label text="Status Presensi" textFill="#F57F17">
+                        <font><Font name="System Bold" size="14.0"/></font>
+                    </Label>
+                    <Label fx:id="lblStatusDetail" text="Belum Absen Hari Ini. Silakan Clock-In." textFill="#F57F17"/>
+                </VBox>
+            </HBox>
+
+            <!-- Grid Rekapitulasi (Semua 0) -->
+            <GridPane hgap="15.0" vgap="15.0">
+                <VBox prefHeight="80.0" prefWidth="250.0" style="-fx-background-color: #FAFAFA; -fx-border-color: #EEEEEE; -fx-border-radius: 8; -fx-background-radius: 8;" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0"/></padding>
+                    <Label text="Kehadiran bulan ini" textFill="#757575"/>
+                    <Label fx:id="lblHadir" text="0 hari">
+                        <font><Font name="System Bold" size="20.0"/></font>
+                    </Label>
+                </VBox>
+                <VBox prefHeight="80.0" prefWidth="250.0" style="-fx-background-color: #FAFAFA; -fx-border-color: #EEEEEE; -fx-border-radius: 8; -fx-background-radius: 8;" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0"/></padding>
+                    <Label text="Keterlambatan" textFill="#757575"/>
+                    <Label fx:id="lblTerlambat" text="0 kali">
+                        <font><Font name="System Bold" size="20.0"/></font>
+                    </Label>
+                </VBox>
+                <VBox prefHeight="80.0" prefWidth="250.0" style="-fx-background-color: #FAFAFA; -fx-border-color: #EEEEEE; -fx-border-radius: 8; -fx-background-radius: 8;" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0"/></padding>
+                    <Label text="Cuti disetujui" textFill="#757575"/>
+                    <Label fx:id="lblCuti" text="0 hari">
+                        <font><Font name="System Bold" size="20.0"/></font>
+                    </Label>
+                </VBox>
+                <VBox prefHeight="80.0" prefWidth="250.0" style="-fx-background-color: #FAFAFA; -fx-border-color: #EEEEEE; -fx-border-radius: 8; -fx-background-radius: 8;" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0"/></padding>
+                    <Label text="Izin pending" textFill="#757575"/>
+                    <Label fx:id="lblIzin" text="0">
+                        <font><Font name="System Bold" size="20.0"/></font>
+                    </Label>
+                </VBox>
+            </GridPane>
+        </VBox>
+    </center>
+</BorderPane>

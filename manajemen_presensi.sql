@@ -1,203 +1,277 @@
-package com.rplbo.app.demo;
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: May 20, 2026 at 09:28 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.0.30
 
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.stage.Stage;
-import javafx.util.Duration;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
-import java.io.IOException;
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
-public class DashboardController implements Initializable {
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
-    // LABEL DASHBOARD
-    @FXML private Label lblJam;
-    @FXML private Label lblTanggal;
-    @FXML private Label lblNamaProfil;
-    @FXML private Label lblStatusDetail;
-    @FXML private Label lblHadir;
-    @FXML private Label lblTerlambat;
-    @FXML private Label lblCuti;
-    @FXML private Label lblIzin;
+--
+-- Database: `manajemen_presensi`
+--
 
-// Menghubungkan dashboard dengan akun Ria (id_karyawan = 3)
-    private final int ID_KARYAWAN_LOGIN = 3;
+-- --------------------------------------------------------
 
-    @Override
-public void initialize(URL location, ResourceBundle resources) {
-        initClock();
+--
+-- Table structure for table `departemen`
+--
 
-// Memuat status & rekap langsung dari Database
-        loadUserData();
-}
+CREATE TABLE `departemen` (
+  `id_departemen` int(11) NOT NULL,
+  `nama_departemen` varchar(100) NOT NULL,
+  `kepala_departemen` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-    /**
-     * JAM DIGITAL REALTIME
-     */
-    private void initClock() {
-        Locale localeID = new Locale("id", "ID");
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", localeID);
+--
+-- Dumping data for table `departemen`
+--
 
-        Timeline clock = new Timeline(
-                new KeyFrame(Duration.ZERO, e -> {
-                    LocalDateTime now = LocalDateTime.now();
-                    lblJam.setText(now.format(timeFormatter));
-                    lblTanggal.setText(now.format(dateFormatter));
-                }),
-                new KeyFrame(Duration.seconds(1))
-        );
+INSERT INTO `departemen` (`id_departemen`, `nama_departemen`, `kepala_departemen`) VALUES
+(1, 'IT', 'Budi Santoso');
 
-        clock.setCycleCount(Animation.INDEFINITE);
-        clock.play();
-}
+-- --------------------------------------------------------
 
-    /**
-     * LOAD DATA DASHBOARD DARI DATABASE
-     */
-    private void loadUserData() {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            LocalDate hariIni = LocalDate.now();
+--
+-- Table structure for table `izin_cuti`
+--
 
-// 1. CEK STATUS PRESENSI HARI INI
-            String sqlStatus = "SELECT jam_masuk, jam_keluar FROM tb_presensi WHERE tanggal = ? AND id_karyawan = ?";
-            PreparedStatement pstStatus = conn.prepareStatement(sqlStatus);
-            pstStatus.setDate(1, java.sql.Date.valueOf(hariIni));
-            pstStatus.setInt(2, ID_KARYAWAN_LOGIN);
+CREATE TABLE `izin_cuti` (
+  `id_izin` int(11) NOT NULL,
+  `id_karyawan` int(11) NOT NULL,
+  `jenis_izin` enum('sakit','cuti','kepentingan lain') NOT NULL,
+  `tanggal_mulai` date NOT NULL,
+  `tanggal_selesai` date NOT NULL,
+  `alasan` text DEFAULT NULL,
+  `status_persetujuan` enum('pending','disetujui','ditolak') DEFAULT 'pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-            ResultSet rsStatus = pstStatus.executeQuery();
+-- --------------------------------------------------------
 
-            if (rsStatus.next()) {
-                // Jika sudah ada jam keluar
-                if (rsStatus.getString("jam_keluar") != null) {
-                    lblStatusDetail.setText("✅ Presensi Selesai. Selamat Beristirahat.");
-                    lblStatusDetail.setStyle("-fx-text-fill: #27C93F; -fx-font-weight: bold;"); // Hijau
-                } else {
-                    // Jika baru jam masuk (Clock-In)
-                    lblStatusDetail.setText("⏳ Sudah Clock-In. Jangan lupa Clock-Out nanti.");
-                    lblStatusDetail.setStyle("-fx-text-fill: #1976D2; -fx-font-weight: bold;"); // Biru
-                }
-            } else {
-                // Jika tidak ada data absensi sama sekali hari ini
-                lblStatusDetail.setText("Belum Absen Hari Ini. Silakan Clock-In.");
-                lblStatusDetail.setStyle("-fx-text-fill: #D32F2F; -fx-font-weight: bold;"); // Merah
-            }
-            rsStatus.close();
-            pstStatus.close();
+--
+-- Table structure for table `jabatan`
+--
 
-// 2. HITUNG TOTAL HADIR BULAN INI
-            String sqlHadir = "SELECT COUNT(*) as total FROM tb_presensi WHERE id_karyawan = ? AND MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE()) AND status_kehadiran = 'hadir'";
-            PreparedStatement pstHadir = conn.prepareStatement(sqlHadir);
-            pstHadir.setInt(1, ID_KARYAWAN_LOGIN);
-            ResultSet rsHadir = pstHadir.executeQuery();
-            if (rsHadir.next()) lblHadir.setText(rsHadir.getString("total") + " hari");
-            rsHadir.close(); pstHadir.close();
+CREATE TABLE `jabatan` (
+  `id_jabatan` int(11) NOT NULL,
+  `nama_jabatan` varchar(100) NOT NULL,
+  `deskripsi` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-// 3. HITUNG TOTAL TERLAMBAT BULAN INI
-            String sqlTerlambat = "SELECT COUNT(*) as total FROM tb_presensi WHERE id_karyawan = ? AND MONTH(tanggal) = MONTH(CURRENT_DATE()) AND YEAR(tanggal) = YEAR(CURRENT_DATE()) AND status_waktu = 'terlambat'";
-            PreparedStatement pstTerlambat = conn.prepareStatement(sqlTerlambat);
-            pstTerlambat.setInt(1, ID_KARYAWAN_LOGIN);
-            ResultSet rsTerlambat = pstTerlambat.executeQuery();
-            if (rsTerlambat.next()) lblTerlambat.setText(rsTerlambat.getString("total") + " kali");
-            rsTerlambat.close(); pstTerlambat.close();
+--
+-- Dumping data for table `jabatan`
+--
 
-// 4. HITUNG TOTAL CUTI DISETUJUI
-            String sqlCuti = "SELECT COUNT(*) as total FROM tb_izin_cuti WHERE id_karyawan = ? AND jenis_izin = 'cuti' AND status_persetujuan = 'disetujui'";
-            PreparedStatement pstCuti = conn.prepareStatement(sqlCuti);
-            pstCuti.setInt(1, ID_KARYAWAN_LOGIN);
-            ResultSet rsCuti = pstCuti.executeQuery();
-            if (rsCuti.next()) lblCuti.setText(rsCuti.getString("total") + " hari");
-            rsCuti.close(); pstCuti.close();
+INSERT INTO `jabatan` (`id_jabatan`, `nama_jabatan`, `deskripsi`) VALUES
+(1, 'Administrator', 'Mengelola sistem penuh');
 
-// 5. HITUNG TOTAL IZIN/SAKIT DISETUJUI
-            String sqlIzin = "SELECT COUNT(*) as total FROM tb_izin_cuti WHERE id_karyawan = ? AND jenis_izin IN ('sakit', 'kepentingan lain') AND status_persetujuan = 'disetujui'";
-            PreparedStatement pstIzin = conn.prepareStatement(sqlIzin);
-            pstIzin.setInt(1, ID_KARYAWAN_LOGIN);
-            ResultSet rsIzin = pstIzin.executeQuery();
-            if (rsIzin.next()) lblIzin.setText(rsIzin.getString("total") + " hari");
-            rsIzin.close(); pstIzin.close();
+-- --------------------------------------------------------
 
-} catch (Exception e) {
-            System.err.println("Gagal memuat data dari database!");
-            e.printStackTrace();
-}
-    }
+--
+-- Table structure for table `karyawan`
+--
 
-    public void setNamaPengguna(String username) {
-        lblNamaProfil.setText(username);
-}
+CREATE TABLE `karyawan` (
+  `id_karyawan` int(11) NOT NULL,
+  `nama` varchar(100) NOT NULL,
+  `nik` varchar(20) NOT NULL,
+  `id_jabatan` int(11) DEFAULT NULL,
+  `id_departemen` int(11) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `no_telepon` varchar(15) DEFAULT NULL,
+  `tanggal_masuk` date DEFAULT NULL,
+  `status` enum('aktif','nonaktif') DEFAULT 'aktif'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-    // =====================================================
-    // NAVIGASI MENU
-    // =====================================================
+--
+-- Dumping data for table `karyawan`
+--
 
-    @FXML
-    private void handleMenuBeranda(ActionEvent event) {
-        System.out.println("Anda sedang berada di Dashboard.");
-}
+INSERT INTO `karyawan` (`id_karyawan`, `nama`, `nik`, `id_jabatan`, `id_departemen`, `email`, `no_telepon`, `tanggal_masuk`, `status`) VALUES
+(1, 'Frans S', '71200556', 1, 1, 'frans@admin.com', '0812345678', '2026-01-01', 'aktif'),
+(2, 'Amelia Agustin', '71231038', 1, 1, NULL, NULL, NULL, 'aktif');
 
-    @FXML
-    private void handleMenuPresensi(ActionEvent event) {
-        pindahHalaman(event, "presensi-view.fxml", "Manajemen Presensi - Presensi");
-}
+-- --------------------------------------------------------
 
-    @FXML
-    private void handleMenuRiwayat(ActionEvent event) {
-        pindahHalaman(event, "riwayat-view.fxml", "Manajemen Presensi - Riwayat");
-}
+--
+-- Table structure for table `pengguna`
+--
 
-    @FXML
-    private void handleMenuCuti(ActionEvent event) {
-        pindahHalaman(event, "cuti-view.fxml", "Manajemen Presensi - Cuti");
-}
+CREATE TABLE `pengguna` (
+  `id_pengguna` int(11) NOT NULL,
+  `id_karyawan` int(11) DEFAULT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('admin','karyawan') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-    @FXML
-    private void handleLogout(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("login-view.fxml"));
-            Parent root = loader.load();
-            Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root, 400, 500));
-            stage.setTitle("Manajemen Presensi - Login");
-            stage.centerOnScreen();
-            stage.show();
-} catch (IOException e) {
-            System.err.println("Gagal logout");
-            e.printStackTrace();
-}
-    }
+--
+-- Dumping data for table `pengguna`
+--
 
-    /**
-     * Helper Method untuk pindah halaman
-     */
-    private void pindahHalaman(ActionEvent event, String fxmlFile, String title) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
-            Parent root = loader.load();
-            Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root, 900, 600));
-            stage.setTitle(title);
-            stage.show();
-} catch (IOException e) {
-            System.err.println("Gagal membuka halaman: " + fxmlFile);
-            e.printStackTrace();
-}
-    }
-}
+INSERT INTO `pengguna` (`id_pengguna`, `id_karyawan`, `username`, `password`, `role`) VALUES
+(1, 1, 'admin_frans', 'admin123', 'admin'),
+(2, 2, 'amelia', 'amelia123', 'karyawan');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `presensi`
+--
+
+CREATE TABLE `presensi` (
+  `id_presensi` int(11) NOT NULL,
+  `id_karyawan` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `jam_masuk` time DEFAULT NULL,
+  `jam_keluar` time DEFAULT NULL,
+  `status_kehadiran` enum('hadir','izin','sakit','alpha') DEFAULT NULL,
+  `status_waktu` enum('tepat_waktu','terlambat','pulang_cepat') DEFAULT NULL,
+  `keterangan` text DEFAULT NULL,
+  `edited_by` int(11) DEFAULT NULL,
+  `edited_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `presensi`
+--
+
+INSERT INTO `presensi` (`id_presensi`, `id_karyawan`, `tanggal`, `jam_masuk`, `jam_keluar`, `status_kehadiran`, `status_waktu`, `keterangan`, `edited_by`, `edited_at`) VALUES
+(1, 1, '2026-05-15', '11:26:58', '11:26:59', 'hadir', 'tepat_waktu', NULL, NULL, NULL),
+(2, 2, '2026-05-15', '11:55:43', '11:55:57', 'hadir', 'tepat_waktu', NULL, NULL, NULL),
+(3, 2, '2026-05-19', '14:10:13', '14:10:14', 'hadir', 'tepat_waktu', NULL, NULL, NULL),
+(4, 1, '2026-05-20', '14:09:55', NULL, 'hadir', 'tepat_waktu', NULL, NULL, NULL),
+(5, 2, '2026-05-20', '14:26:23', '14:26:37', 'hadir', 'tepat_waktu', NULL, NULL, NULL);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `departemen`
+--
+ALTER TABLE `departemen`
+  ADD PRIMARY KEY (`id_departemen`);
+
+--
+-- Indexes for table `izin_cuti`
+--
+ALTER TABLE `izin_cuti`
+  ADD PRIMARY KEY (`id_izin`),
+  ADD KEY `id_karyawan` (`id_karyawan`);
+
+--
+-- Indexes for table `jabatan`
+--
+ALTER TABLE `jabatan`
+  ADD PRIMARY KEY (`id_jabatan`);
+
+--
+-- Indexes for table `karyawan`
+--
+ALTER TABLE `karyawan`
+  ADD PRIMARY KEY (`id_karyawan`),
+  ADD UNIQUE KEY `nik` (`nik`),
+  ADD KEY `id_jabatan` (`id_jabatan`),
+  ADD KEY `id_departemen` (`id_departemen`);
+
+--
+-- Indexes for table `pengguna`
+--
+ALTER TABLE `pengguna`
+  ADD PRIMARY KEY (`id_pengguna`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `id_karyawan` (`id_karyawan`);
+
+--
+-- Indexes for table `presensi`
+--
+ALTER TABLE `presensi`
+  ADD PRIMARY KEY (`id_presensi`),
+  ADD KEY `id_karyawan` (`id_karyawan`),
+  ADD KEY `edited_by` (`edited_by`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `departemen`
+--
+ALTER TABLE `departemen`
+  MODIFY `id_departemen` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `izin_cuti`
+--
+ALTER TABLE `izin_cuti`
+  MODIFY `id_izin` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `jabatan`
+--
+ALTER TABLE `jabatan`
+  MODIFY `id_jabatan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `karyawan`
+--
+ALTER TABLE `karyawan`
+  MODIFY `id_karyawan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `pengguna`
+--
+ALTER TABLE `pengguna`
+  MODIFY `id_pengguna` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `presensi`
+--
+ALTER TABLE `presensi`
+  MODIFY `id_presensi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `izin_cuti`
+--
+ALTER TABLE `izin_cuti`
+  ADD CONSTRAINT `izin_cuti_ibfk_1` FOREIGN KEY (`id_karyawan`) REFERENCES `karyawan` (`id_karyawan`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `karyawan`
+--
+ALTER TABLE `karyawan`
+  ADD CONSTRAINT `karyawan_ibfk_1` FOREIGN KEY (`id_jabatan`) REFERENCES `jabatan` (`id_jabatan`) ON DELETE SET NULL,
+  ADD CONSTRAINT `karyawan_ibfk_2` FOREIGN KEY (`id_departemen`) REFERENCES `departemen` (`id_departemen`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `pengguna`
+--
+ALTER TABLE `pengguna`
+  ADD CONSTRAINT `pengguna_ibfk_1` FOREIGN KEY (`id_karyawan`) REFERENCES `karyawan` (`id_karyawan`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `presensi`
+--
+ALTER TABLE `presensi`
+  ADD CONSTRAINT `presensi_ibfk_1` FOREIGN KEY (`id_karyawan`) REFERENCES `karyawan` (`id_karyawan`) ON DELETE CASCADE,
+  ADD CONSTRAINT `presensi_ibfk_2` FOREIGN KEY (`edited_by`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE SET NULL;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

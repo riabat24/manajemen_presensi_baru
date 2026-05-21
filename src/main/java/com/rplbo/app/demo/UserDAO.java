@@ -10,7 +10,7 @@ public class UserDAO {
     // Fungsi untuk memvalidasi login dan mengembalikan role pengguna
     public String authenticateUser(String username, String password) {
         // Asumsi kelas DatabaseConnection sudah dibuat untuk mengatur JDBC
-        String query = "SELECT role FROM tb_pengguna WHERE username = ? AND password = ?";
+        String query = "SELECT role FROM pengguna WHERE username = ? AND password = ?";
 
         try (Connection conn = com.rplbo.app.demo.DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {

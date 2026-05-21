@@ -36,8 +36,8 @@ public class AuthController {
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT p.id_karyawan, p.username, p.role, k.nama " +
-                    "FROM tb_pengguna p " +
-                    "JOIN tb_karyawan k ON p.id_karyawan = k.id_karyawan " +
+                    "FROM pengguna p " +
+                    "JOIN karyawan k ON p.id_karyawan = k.id_karyawan " +
                     "WHERE p.username = ? AND p.password = ?";
 
             PreparedStatement pst = conn.prepareStatement(sql);
