@@ -20,237 +20,128 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 public class RiwayatController implements Initializable {
 
-    // TABLE
-    @FXML
-    private TableView<PresensiController> tableRiwayat;
+    @FXML private TableView<Presensi> tableRiwayat;
+    @FXML private TableColumn<Presensi, String> colTanggal;
+    @FXML private TableColumn<Presensi, String> colMasuk;
+    @FXML private TableColumn<Presensi, String> colKeluar;
+    @FXML private TableColumn<Presensi, String> colStatus;
+    @FXML private Label lblTotalHadir;
+    @FXML private Label lblTerlambat;
+    @FXML private Label lblIzin;
+    @FXML private ComboBox<String> cmbFilter;
 
-    // COLUMN
-    @FXML
-    private TableColumn<PresensiController, String> colTanggal;
-
-    @FXML
-    private TableColumn<PresensiController, String> colMasuk;
-
-    @FXML
-    private TableColumn<PresensiController, String> colKeluar;
-
-    @FXML
-    private TableColumn<PresensiController, String> colStatus;
-
-    // LABEL REKAP
-    @FXML
-    private Label lblTotalHadir;
-
-    @FXML
-    private Label lblTerlambat;
-
-    @FXML
-    private Label lblIzin;
-
-    // FILTER
-    @FXML
-    private ComboBox<String> cmbFilter;
-
-    // LIST DATA
-    private ObservableList<PresensiController> list =
-            FXCollections.observableArrayList();
+    private final ObservableList<Presensi> list = FXCollections.observableArrayList();
+    private final DateTimeFormatter filterFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", new java.util.Locale("id", "ID"));
 
     @Override
-    public void initialize(URL location,
-                           ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources) {
+        colTanggal.setCellValueFactory(new PropertyValueFactory<>("tanggal"));
+        colMasuk.setCellValueFactory(new PropertyValueFactory<>("jamMasuk"));
+        colKeluar.setCellValueFactory(new PropertyValueFactory<>("jamKeluar"));
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // SET COLUMN
-        colTanggal.setCellValueFactory(
-                new PropertyValueFactory<>("tanggal")
-        );
-
-        colMasuk.setCellValueFactory(
-                new PropertyValueFactory<>("jamMasuk")
-        );
-
-        colKeluar.setCellValueFactory(
-                new PropertyValueFactory<>("jamKeluar")
-        );
-
-        colStatus.setCellValueFactory(
-                new PropertyValueFactory<>("status")
-        );
-
-        // FILTER BULAN
-        cmbFilter.getItems().addAll(
-                "Semua Data",
-                "April 2026",
-                "Mei 2026"
-        );
-
+        isiFilterBulan();
         cmbFilter.setValue("Semua Data");
+        cmbFilter.setOnAction(e -> {
+            tampilData();
+            hitungRekap();
+        });
 
-        // LOAD DATA
         tampilData();
-
-        // HITUNG REKAP
         hitungRekap();
     }
 
-    // TAMPILKAN DATA
+    private void isiFilterBulan() {
+        cmbFilter.getItems().add("Semua Data");
+        LocalDate now = LocalDate.now();
+        for (int i = 0; i < 6; i++) {
+            cmbFilter.getItems().add(now.minusMonths(i).format(filterFormatter));
+        }
+    }
+
     private void tampilData() {
-
         list.clear();
+        int idKaryawan = UserSession.getInstance().getIdKaryawan();
+        String filter = cmbFilter.getValue();
 
-        try {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql;
+            PreparedStatement pst;
 
-            Connection conn =
-                    DatabaseConnection.getConnection();
+            if (filter == null || filter.equals("Semua Data")) {
+                sql = "SELECT tanggal, jam_masuk, jam_keluar, status_kehadiran, status_waktu FROM presensi WHERE id_karyawan = ? ORDER BY tanggal DESC";
+                pst = conn.prepareStatement(sql);
+                pst.setInt(1, idKaryawan);
+            } else {
+                sql = "SELECT tanggal, jam_masuk, jam_keluar, status_kehadiran, status_waktu FROM presensi WHERE id_karyawan = ? AND DATE_FORMAT(tanggal, '%M %Y') = ? ORDER BY tanggal DESC";
+                pst = conn.prepareStatement(sql);
+                pst.setInt(1, idKaryawan);
+                pst.setString(2, filter);
+            }
 
-            String sql =
-                    "SELECT * FROM presensi " +
-                            "ORDER BY tanggal DESC";
-
-            PreparedStatement pst =
-                    conn.prepareStatement(sql);
-
-            ResultSet rs =
-                    pst.executeQuery();
-
+            ResultSet rs = pst.executeQuery();
             while (rs.next()) {
-
-                list.add(
-
-                        new Presensi(
-
-                                rs.getString("tanggal"),
-
-                                rs.getString("jam_masuk"),
-
-                                rs.getString("jam_keluar"),
-
-                                rs.getString("status")
-                        )
-                );
+                String statusKehadiran = rs.getString("status_kehadiran");
+                String statusWaktu = rs.getString("status_waktu");
+                String status = statusKehadiran != null ? statusKehadiran : "-";
+                if ("hadir".equals(statusKehadiran) && statusWaktu != null) {
+                    status = statusWaktu.replace("_", " ");
+                }
+                list.add(new Presensi(
+                        rs.getString("tanggal"),
+                        rs.getString("jam_masuk") != null ? rs.getString("jam_masuk") : "-",
+                        rs.getString("jam_keluar") != null ? rs.getString("jam_keluar") : "-",
+                        status
+                ));
             }
-
             tableRiwayat.setItems(list);
-
-            rs.close();
-            pst.close();
-            conn.close();
-
         } catch (Exception e) {
-
             e.printStackTrace();
         }
     }
 
-    // HITUNG REKAP
     private void hitungRekap() {
+        int idKaryawan = UserSession.getInstance().getIdKaryawan();
+        String filter = cmbFilter.getValue();
 
-        try {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String where = (filter == null || filter.equals("Semua Data"))
+                    ? "WHERE id_karyawan = ?"
+                    : "WHERE id_karyawan = ? AND DATE_FORMAT(tanggal, '%M %Y') = ?";
 
-            Connection conn =
-                    DatabaseConnection.getConnection();
+            String[] labels = {"hadir", "terlambat", "izin"};
+            String[] conditions = {
+                "status_kehadiran = 'hadir' AND status_waktu = 'tepat_waktu'",
+                "status_waktu = 'terlambat'",
+                "status_kehadiran IN ('izin', 'sakit')"
+            };
+            Label[] lbls = {lblTotalHadir, lblTerlambat, lblIzin};
 
-            // TOTAL HADIR
-            String hadirSql =
-                    "SELECT COUNT(*) as total " +
-                            "FROM presensi " +
-                            "WHERE status='Tepat Waktu'";
-
-            PreparedStatement hadirPst =
-                    conn.prepareStatement(hadirSql);
-
-            ResultSet hadirRs =
-                    hadirPst.executeQuery();
-
-            if (hadirRs.next()) {
-
-                lblTotalHadir.setText(
-                        hadirRs.getString("total")
-                );
+            for (int i = 0; i < 3; i++) {
+                String sql = "SELECT COUNT(*) as total FROM presensi " + where + " AND " + conditions[i];
+                PreparedStatement pst = conn.prepareStatement(sql);
+                pst.setInt(1, idKaryawan);
+                if (filter != null && !filter.equals("Semua Data")) pst.setString(2, filter);
+                ResultSet rs = pst.executeQuery();
+                if (rs.next()) lbls[i].setText(rs.getString("total"));
             }
-
-            // TOTAL TERLAMBAT
-            String terlambatSql =
-                    "SELECT COUNT(*) as total " +
-                            "FROM presensi " +
-                            "WHERE status='Terlambat'";
-
-            PreparedStatement terlambatPst =
-                    conn.prepareStatement(terlambatSql);
-
-            ResultSet terlambatRs =
-                    terlambatPst.executeQuery();
-
-            if (terlambatRs.next()) {
-
-                lblTerlambat.setText(
-                        terlambatRs.getString("total")
-                );
-            }
-
-            // TOTAL IZIN
-            String izinSql =
-                    "SELECT COUNT(*) as total " +
-                            "FROM presensi " +
-                            "WHERE status='Izin'";
-
-            PreparedStatement izinPst =
-                    conn.prepareStatement(izinSql);
-
-            ResultSet izinRs =
-                    izinPst.executeQuery();
-
-            if (izinRs.next()) {
-
-                lblIzin.setText(
-                        izinRs.getString("total")
-                );
-            }
-
-            hadirRs.close();
-            hadirPst.close();
-
-            terlambatRs.close();
-            terlambatPst.close();
-
-            izinRs.close();
-            izinPst.close();
-
-            conn.close();
-
         } catch (Exception e) {
-
             e.printStackTrace();
         }
     }
 
-    // KEMBALI DASHBOARD
     @FXML
-    private void handleKembaliDashboard(ActionEvent event)
-            throws IOException {
-
-        FXMLLoader loader =
-                new FXMLLoader(
-                        getClass().getResource(
-                                "dashboard-karyawan-view.fxml"
-                        )
-                );
-
-        Scene scene =
-                new Scene(loader.load());
-
-        Stage stage =
-                (Stage)((Node)event.getSource())
-                        .getScene()
-                        .getWindow();
-
-        stage.setScene(scene);
-
-        stage.setTitle("Dashboard");
-
+    private void handleKembaliDashboard(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard-karyawan-view.fxml"));
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.setScene(new Scene(loader.load(), 900, 600));
+        stage.setTitle("Manajemen Presensi - Dashboard");
         stage.show();
     }
 }

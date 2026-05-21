@@ -16,13 +16,12 @@ public class UserDAO {
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             stmt.setString(1, username);
-            // Catatan: Sesuai proposal, password idealnya diverifikasi dengan BCrypt di tahap produksi
             stmt.setString(2, password);
 
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getString("role"); // Mengembalikan 'admin' atau 'karyawan'
+                return rs.getString("role");
             }
 
         } catch (SQLException e) {
