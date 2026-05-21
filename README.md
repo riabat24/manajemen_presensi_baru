@@ -17,13 +17,13 @@
 | **🔐 Login & Otentikasi** | Validasi pengguna dengan role-based access (Admin & Karyawan). | ✅ |
 | **🏠 Dashboard Karyawan** | Menampilkan profil, jam real-time, dan status kehadiran hari ini. | ✅ |
 | **⏱ Clock-In & Clock-Out** | Pencatatan jam masuk dan keluar otomatis dari waktu sistem. | ✅ |
+| **📋 Riwayat Presensi** | Log kehadiran karyawan dengan filter bulan dan rekap statistik. | ✅ |
 
 ---
 
 ## 🚧 Development Roadmap
 
 ### 🔨 Sedang Dikerjakan (On Going)
-- [ ] Riwayat Presensi Karyawan (Log Kehadiran)
 - [ ] Manajemen Pengajuan Cuti dan Izin
 
 ### 🏗️ Dalam Perencanaan (Under Construction)
