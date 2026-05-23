@@ -12,7 +12,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,6 +34,9 @@ public class AuthController {
             return;
         }
 
+        boolean isLoginBerhasil = false;
+
+        // --- BLOK KHUSUS DATABASE ---
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT p.id_karyawan, p.username, p.role, k.nama " +
                     "FROM pengguna p " +
@@ -53,15 +56,21 @@ public class AuthController {
                         rs.getString("nama"),
                         rs.getString("role")
                 );
-
-                pindahKeDashboard(event);
+                isLoginBerhasil = true; // Tandai bahwa login sukses!
             } else {
                 tampilkanError("Username atau Password salah!");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            tampilkanError("Gagal terhubung ke database!");
+            // Jika masuk ke sini, ini BENAR-BENAR error database
+            tampilkanError("Koneksi Database Error: " + e.getMessage());
+            return;
+        }
+
+        // --- BLOK KHUSUS PINDAH HALAMAN (DI LUAR TRY-CATCH DATABASE) ---
+        if (isLoginBerhasil) {
+            pindahKeDashboard(event);
         }
     }
 
@@ -72,16 +81,35 @@ public class AuthController {
 
     private void pindahKeDashboard(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("dashboard-karyawan-view.fxml"));
+            String role = UserSession.getInstance().getRole();
+            String fileFxml = "admin".equalsIgnoreCase(role) ? "dashboard-admin-view.fxml" : "dashboard-karyawan-view.fxml";
+            String judulHalaman = "admin".equalsIgnoreCase(role) ? "Manajemen Presensi - Dashboard Admin" : "Manajemen Presensi - Dashboard Karyawan";
+
+            // Perbaikan rute pemanggilan FXML menggunakan path absolut
+            URL fxmlLocation = getClass().getResource("/com/rplbo/app/demo/" + fileFxml);
+            if (fxmlLocation == null) {
+                // Fallback jika path absolut gagal
+                fxmlLocation = getClass().getResource(fileFxml);
+            }
+
+            if (fxmlLocation == null) {
+                tampilkanError("Error UI: File " + fileFxml + " tidak ditemukan!");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxmlLocation);
             Parent root = loader.load();
             Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+
             stage.setScene(new Scene(root, 900, 600));
-            stage.setTitle("Manajemen Presensi - Dashboard");
+            stage.setTitle(judulHalaman);
             stage.centerOnScreen();
             stage.show();
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             e.printStackTrace();
-            tampilkanError("Gagal memuat halaman Dashboard.");
+            // Menampilkan error asli jika FXML-nya yang bermasalah, bukan menyalahkan database
+            tampilkanError("Gagal memuat halaman: " + e.getMessage());
         }
     }
 }
