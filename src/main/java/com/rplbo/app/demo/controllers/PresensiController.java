@@ -36,6 +36,7 @@ public class PresensiController implements Initializable {
     private boolean isClockedIn = false;
     private final LocalTime BATAS_AWAL_MASUK = LocalTime.of(7, 0);
     private final LocalTime JAM_MASUK_NORMAL = LocalTime.of(8, 30);
+    // Batas akhir masuk (10:00) tetap dideklarasikan namun pemeriksaannya kita matikan di bawah
     private final LocalTime BATAS_AKHIR_MASUK = LocalTime.of(10, 0);
     private final LocalTime BATAS_AWAL_KELUAR = LocalTime.of(8, 0);
 
@@ -60,20 +61,32 @@ public class PresensiController implements Initializable {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
 
         if (!isClockedIn) {
-            if (now.isBefore(BATAS_AWAL_MASUK)) { tampilkanAlert(Alert.AlertType.WARNING, "Gagal Clock-In", "Belum waktunya presensi."); return; }
-            if (now.isAfter(BATAS_AKHIR_MASUK)) { tampilkanAlert(Alert.AlertType.ERROR, "Gagal Clock-In", "Batas waktu presensi habis."); return; }
+            // Hanya tolak jika absen terlalu pagi (sebelum jam 7 pagi)
+            if (now.isBefore(BATAS_AWAL_MASUK)) {
+                tampilkanAlert(Alert.AlertType.WARNING, "Gagal Clock-In", "Belum waktunya presensi.");
+                return;
+            }
+
+            // LOGIKA BARU: Aturan blokir absen di atas jam 10:00 SUDAH DIHAPUS di sini.
+            // Sekarang jam berapapun Karyawan datang di atas jam 08:30 akan langsung dihitung "Terlambat".
 
             String statusWaktuDB = now.isAfter(JAM_MASUK_NORMAL) ? "terlambat" : "tepat_waktu";
             lblJamMasuk.setText(now.format(dtf));
             lblStatusMasuk.setText(now.isAfter(JAM_MASUK_NORMAL) ? "Terlambat" : "Tepat Waktu");
+
             lblStatusMasuk.setStyle(statusWaktuDB.equals("terlambat") ? "-fx-background-color: #FFCDD2; -fx-text-fill: #C62828; -fx-padding: 5 15 5 15; -fx-background-radius: 20; -fx-font-weight: bold;" : "-fx-background-color: #C8E6C9; -fx-text-fill: #2E7D32; -fx-padding: 5 15 5 15; -fx-background-radius: 20; -fx-font-weight: bold;");
 
             btnPresensi.setText("🚪 Clock-Out Sekarang");
             btnPresensi.setStyle("-fx-background-color: #D32F2F; -fx-background-radius: 10; -fx-text-fill: white; -fx-font-size: 18px;");
             simpanClockIn(now, statusWaktuDB);
             isClockedIn = true;
+
         } else {
-            if (now.isBefore(BATAS_AWAL_KELUAR)) { tampilkanAlert(Alert.AlertType.WARNING, "Gagal Clock-Out", "Belum waktunya pulang."); return; }
+            // LOGIKA CLOCK-OUT
+            if (now.isBefore(BATAS_AWAL_KELUAR)) {
+                tampilkanAlert(Alert.AlertType.WARNING, "Gagal Clock-Out", "Belum waktunya pulang.");
+                return;
+            }
             lblJamKeluar.setText(now.format(dtf));
             lblStatusKeluar.setText("Selesai Shift");
             btnPresensi.setDisable(true);
